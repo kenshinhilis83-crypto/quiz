@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCI Knowledge Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-content {
+            padding: 30px;
+        }
+
+        .start-screen, .question-screen, .result-screen {
+            display: none;
+        }
+
+        .start-screen.active, .question-screen.active, .result-screen.active {
+            display: block;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .start-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .question-text {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.05em;
+        }
+
+        .option:hover {
+            background: #e8eaf6;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #e8eaf6;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .result-screen {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            color: white;
+        }
+
+        .score-circle .score {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .score-circle .total {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .result-message {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .result-description {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .feedback {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            text-align: left;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .feedback-text {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .btn-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HCI Knowledge Quiz</h1>
+            <p>Test Your Understanding of Human-Computer Interaction</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="quiz-content">
+            <!-- Start Screen -->
+            <div class="start-screen active" id="startScreen">
+                <h2>Welcome to the HCI Quiz! 🎯</h2>
+                <p>This quiz covers topics from HCI principles, design, development, evaluation, and emerging technologies.</p>
+                <p><strong>20 questions</strong> | Multiple choice format</p>
+                <p>Test your knowledge and see how well you understand Human-Computer Interaction concepts!</p>
+                <button class="btn" onclick="startQuiz()">Start Quiz</button>
+            </div>
+
+            <!-- Question Screen -->
+            <div class="question-screen" id="questionScreen">
+                <div class="question-number" id="questionNumber"></div>
+                <div class="question-text" id="questionText"></div>
+                <div class="options" id="optionsContainer"></div>
+                <div class="feedback" id="feedback">
+                    <div class="feedback-title">Explanation:</div>
+                    <div class="feedback-text" id="feedbackText"></div>
+                </div>
+                <div class="btn-container">
+                    <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div class="result-screen" id="resultScreen">
+                <h2 class="result-message" id="resultMessage"></h2>
+                <div class="score-circle">
+                    <div class="score" id="finalScore">0</div>
+                    <div class="total">out of 20</div>
+                </div>
+                <p class="result-description" id="resultDescription"></p>
+                <button class="btn" onclick="restartQuiz()">Take Quiz Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What does HCI stand for?",
+                options: ["Human-Computer Interaction", "High Computing Interface", "Human Communication Integration", "Hardware Computing Interface"],
+                correct: 0,
+                explanation: "HCI stands for Human-Computer Interaction, which is a cross-disciplinary area dealing with the theory, design, implementation, and evaluation of ways humans use and interact with computing devices."
+            },
+            {
+                question: "Which principle emphasizes designing systems based on user needs and capabilities?",
+                options: ["Reduce Memory Load", "Know the User", "Strive for Consistency", "Natural Interaction"],
+                correct: 1,
+                explanation: "The 'Know the User' principle, also known as user-centered design, serves as the primary principle of HCI. It implies that the interaction and interface should cater to the needs and capabilities of the target users."
+            },
+            {
+                question: "What does GOMS stand for in the GOMS model?",
+                options: ["Goals, Operations, Methods, Systems", "Goals, Operators, Methods, Selection rules", "Graphics, Objects, Models, Systems", "General Operations Management System"],
+                correct: 1,
+                explanation: "GOMS stands for Goals, Operators, Methods, and Selection rules. It is a human information processing model that predicts what skilled users will do in seemingly unpredictable situations."
+            },
+            {
+                question: "What is the capacity of human short-term memory according to HCI principles?",
+                options: ["3 to 5 items", "5 to 9 items", "10 to 15 items", "15 to 20 items"],
+                correct: 1,
+                explanation: "The capacity of human short-term memory is about 5 to 9 specific pieces of information with respect to the completion of a task. This is why it's important to keep the user's short-term memory load light."
+            },
+            {
+                question: "What does MVC stand for in software architecture?",
+                options: ["Model-View-Component", "Mode-Visual-Controller", "Model-View-Controller", "Module-View-Content"],
+                correct: 2,
+                explanation: "MVC stands for Model-View-Controller, a three-layer framework used in developing and implementing user interfaces, especially web applications. It divides applications into three interconnected parts."
+            },
+            {
+                question: "Which type of user interface allows users to control applications with keystrokes and commands?",
+                options: ["Graphical User Interface (GUI)", "Command Line Interface (CLI)", "Natural Language Interface", "Menu-Based Interface"],
+                correct: 1,
+                explanation: "Command Line Interface (CLI) allows the user to control the application with a series of keystrokes, commands, or phrases. It requires memorization of syntax but experienced users often prefer it for faster completion time."
+            },
+            {
+                question: "What does WIMP stand for in GUI components?",
+                options: ["Web, Image, Menu, Pointer", "Windows, Icon, Menu, Pointer", "Widget, Interface, Model, Platform", "Window, Input, Mouse, Program"],
+                correct: 1,
+                explanation: "WIMP stands for Windows, Icon, Menu, and Pointer. These are the essential elements of graphical user interfaces that have significantly contributed to the propagation of computer technologies."
+            },
+            {
+                question: "What is the purpose of wire-framing in UI design?",
+                options: ["To add visual design and colors", "To establish basic structure before visual design", "To write the final code", "To test the application"],
+                correct: 1,
+                explanation: "Wire-framing is used to layout content and functionality at a structural level before visual design and content are added. It establishes the basic structure of a page considering users' needs and experience."
+            },
+            {
+                question: "Which evaluation method involves HCI experts analyzing against prepared HCI guidelines?",
+                options: ["Focus interview", "Cognitive walkthrough", "Expert heuristic evaluation", "Measurement"],
+                correct: 2,
+                explanation: "Expert heuristic evaluation involves HCI experts as evaluators who analyze the interface against prepared HCI guidelines (heuristics). It's fast, cost-effective, and one of the most popular UI evaluation methods."
+            },
+            {
+                question: "What does UX stand for?",
+                options: ["User Exchange", "Universal Experience", "User Experience", "Unified Extension"],
+                correct: 2,
+                explanation: "UX stands for User Experience, which is the 'totality' of the user's involvement with the software or application. It involves the whole product and is closely related to user emotion, satisfaction, and perception."
+            },
+            {
+                question: "Which type of AR uses GPS and digital compass to provide location-based data?",
+                options: ["Marker-Based AR", "Markerless-Based AR", "Projection-Based AR", "Superimposition-Based AR"],
+                correct: 1,
+                explanation: "Markerless-Based AR is one of the most widely implemented applications that uses GPS, digital compass, velocity meter, and/or accelerometer embedded in a device to provide data based on the user's location."
+            },
+            {
+                question: "What technology creates a simulated environment where users are immersed inside an experience?",
+                options: ["Augmented Reality (AR)", "Virtual Reality (VR)", "Mixed Reality (MR)", "Enhanced Reality"],
+                correct: 1,
+                explanation: "Virtual Reality (VR) uses technology to create a simulated environment, placing users inside an experience. Users are immersed and able to interact with 3D objects by stimulating multiple senses."
+            },
+            {
+                question: "What is an API in the context of user interface layers?",
+                options: ["Application Programming Interface", "Automated Process Integration", "Advanced Program Interaction", "Applied Platform Interface"],
+                correct: 0,
+                explanation: "API stands for Application Programming Interface. It's a set of routines, protocols, and tools for building software applications that specifies how software components should interact."
+            },
+            {
+                question: "Which Java package supports event-driven programming in GUI?",
+                options: ["java.net", "java.sql", "java.awt.event", "java.io"],
+                correct: 2,
+                explanation: "The java.awt.event package supports event-driven programming in GUI applications. Event handling is part of Java's event mechanism included in the Swing GUI library, supported by packages like java.awt.event."
+            },
+            {
+                question: "What does Fitts' Law predict?",
+                options: ["Memory capacity", "Time to reach a target based on distance and size", "Color perception", "Sound intensity"],
+                correct: 1,
+                explanation: "Fitts' Law is a model of human movement that predicts the time required to move rapidly to a target area as a function of the distance to and size of the target. It's applicable to rapid, pointing movements."
+            },
+            {
+                question: "Which modality is considered the most important information medium, using over 40% of the brain?",
+                options: ["Aural", "Haptic", "Visual", "Tactile"],
+                correct: 2,
+                explanation: "Visual modality is the most important information medium today. Over 40% of the human brain is involved in processing visual information, making visual interface design parameters crucial."
+            },
+            {
+                question: "What is the primary advantage of the MVC framework?",
+                options: ["Faster loading times", "Smaller file sizes", "Separation of concerns allowing parallel development", "Better graphics"],
+                correct: 2,
+                explanation: "A primary advantage of MVC is the separation of data and business logic from display, enabling faster development through parallel development of all MVC components and providing multiple views for a single model."
+            },
+            {
+                question: "Which usability assessment measures task performance like completion time and error rate?",
+                options: ["Qualitative Evaluation", "Quantitative Assessment", "Heuristic Evaluation", "Cognitive Walkthrough"],
+                correct: 1,
+                explanation: "Quantitative Assessment involves task performance measurement in forms like completion time, score, and error rate. A UI has high usability if users show minimum task accomplishment time."
+            },
+            {
+                question: "What technology allows consumers to interact by speaking, enabling hands-free requests?",
+                options: ["Touch Recognition", "Voice Recognition", "Gesture Control", "Eye Tracking"],
+                correct: 1,
+                explanation: "Voice recognition is the ability of a machine or program to receive and interpret dictation or understand spoken commands, enabling hands-free interaction. Examples include Amazon Alexa, Apple Siri, and Microsoft Cortana."
+            },
+            {
+                question: "Which guideline category ensures web content is accessible to people with disabilities?",
+                options: ["WIMP", "GOMS", "WCAG", "MVC"],
+                correct: 2,
+                explanation: "WCAG (Web Content Accessibility Guidelines) published by W3C covers recommendations for making web content accessible to people with disabilities, including accommodations for various impairments."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        function startQuiz() {
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('questionScreen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = quizData[currentQuestion];
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+            document.getElementById('questionText').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('nextBtn').disabled = true;
+            selectedAnswer = null;
+
+            updateProgressBar();
+        }
+
+        function selectOption(index) {
+            if (selectedAnswer !== null) return;
+
+            selectedAnswer = index;
+            const question = quizData[currentQuestion];
+            const options = document.querySelectorAll('.option');
+
+            options.forEach((option, i) => {
+                option.classList.add('disabled');
+                if (i === question.correct) {
+                    option.classList.add('correct');
+                }
+                if (i === index && i !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            if (index === question.correct) {
+                score++;
+            }
+
+            document.getElementById('feedbackText').textContent = question.explanation;
+            document.getElementById('feedback').classList.add('show');
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function showResults() {
+            document.getElementById('questionScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            document.getElementById('finalScore').textContent = score;
+
+            const percentage = (score / quizData.length) * 100;
+            let message, description;
+
+            if (percentage >= 90) {
+                message = "Outstanding! 🌟";
+                description = "You have an excellent understanding of HCI concepts!";
+            } else if (percentage >= 75) {
+                message = "Great Job! 🎉";
+                description = "You have a strong grasp of HCI principles and practices.";
+            } else if (percentage >= 60) {
+                message = "Good Effort! 👍";
+                description = "You have a solid foundation, but there's room for improvement.";
+            } else {
+                message = "Keep Learning! 📚";
+                description = "Review the HCI materials and try again to improve your score.";
+            }
+
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('resultDescription').textContent = description;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+            document.getElementById('progressBar').style.width = '0%';
+        }
+    </script>
+</body>
+</html>
